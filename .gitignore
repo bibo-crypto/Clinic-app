@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Build / packaging
+build/
+dist/
+output/
+*.exe
+*.spec.bak
+
+# Database (تُنشأ تلقائياً عند التشغيل)
+database/clinic.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Exports / backups / reports (بيانات حقيقية، لا ترفعها)
+exports/
+backups/
+reports/
+
+# Secrets & config
+db_config.json
+.env
+.env.*
+
+# Logs
+*_log.txt
+build_log.txt
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
