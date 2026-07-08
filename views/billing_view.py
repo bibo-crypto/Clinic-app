@@ -13,6 +13,7 @@ class BillingView(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
         self._selected_id = None
+        self._row_frames = {}
         self._build()
         self._load()
 
@@ -43,7 +44,7 @@ class BillingView(ctk.CTkFrame):
         hf.pack(fill="x")
         for i, (h, w) in enumerate(zip(headers, widths)):
             ctk.CTkLabel(hf, text=h, width=w,
-                         font=ctk.CTkFont(size=12, weight="bold"),
+                         font=ctk.CTkFont(size=13, weight="bold"),
                          text_color=theme.get("text_primary")).grid(row=0, column=i, padx=8, pady=8, sticky="w")
 
         self.scroll = ctk.CTkScrollableFrame(card, fg_color="transparent")
@@ -53,6 +54,7 @@ class BillingView(ctk.CTkFrame):
     def _load(self):
         for w in self.scroll.winfo_children():
             w.destroy()
+        self._row_frames.clear()
         invoices = billing_controller.get_all()
         if not invoices:
             ctk.CTkLabel(self.scroll, text=lang.t("no_records"),
@@ -78,14 +80,23 @@ class BillingView(ctk.CTkFrame):
             for ci, (val, w, color) in enumerate(zip(vals, self._widths, colors_list)):
                 ctk.CTkLabel(row, text=val, width=w,
                              text_color=color,
-                             font=ctk.CTkFont(size=12)).grid(row=0, column=ci, padx=8, pady=0, sticky="w")
+                             font=ctk.CTkFont(size=13)).grid(row=0, column=ci, padx=8, pady=0, sticky="w")
+            self._row_frames[inv.id] = (row, bg)
             iid = inv.id
             row.bind("<Button-1>", lambda e, i=iid: self._select(i))
             for child in row.winfo_children():
                 child.bind("<Button-1>", lambda e, i=iid: self._select(i))
 
     def _select(self, iid):
+        if self._selected_id and self._selected_id in self._row_frames:
+            prev_row, prev_bg = self._row_frames[self._selected_id]
+            try: prev_row.configure(fg_color=prev_bg)
+            except Exception: pass
         self._selected_id = iid
+        if iid in self._row_frames:
+            row, _ = self._row_frames[iid]
+            try: row.configure(fg_color="#1976d2")
+            except Exception: pass
 
     def _open_add(self):
         InvoiceFormDialog(self, self._load)
@@ -112,7 +123,8 @@ class InvoiceFormDialog(ctk.CTkToplevel):
         super().__init__(parent)
         self.on_save = on_save
         self.title(lang.t("create_invoice"))
-        self.geometry("520x560")
+        self.geometry("540x600")
+        self.minsize(500, 540)
         self.resizable(False, False)
         self.grab_set()
         self._services = []
@@ -133,7 +145,7 @@ class InvoiceFormDialog(ctk.CTkToplevel):
         def label(text, row):
             ctk.CTkLabel(frame, text=text, anchor="w",
                          text_color=theme.get("text_secondary"),
-                         font=ctk.CTkFont(size=12)).grid(row=row, column=0, sticky="w", pady=(8, 0))
+                         font=ctk.CTkFont(size=13)).grid(row=row, column=0, sticky="w", pady=(8, 0))
 
         label(lang.t("patient"), 0)
         self.patient_menu = ctk.CTkOptionMenu(frame, values=patient_names or ["—"])

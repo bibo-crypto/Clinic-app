@@ -139,7 +139,7 @@ class MainWindow(ctk.CTk):
             return ReportsView(self.content)
         elif key == "settings":
             from views.settings_view import SettingsView
-            return SettingsView(self.content)
+            return SettingsView(self.content, self.user)
         # Fallback
         return ctk.CTkFrame(self.content, fg_color="transparent")
 

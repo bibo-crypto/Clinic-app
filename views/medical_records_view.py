@@ -13,6 +13,7 @@ class MedicalRecordsView(ctk.CTkFrame):
         super().__init__(master, fg_color="transparent")
         self._selected_patient_id = None
         self._selected_record_id = None
+        self._row_frames = {}
         self._build()
 
     def _build(self):
@@ -68,7 +69,7 @@ class MedicalRecordsView(ctk.CTkFrame):
         hf.pack(fill="x")
         for i, (h, w) in enumerate(zip(headers, widths)):
             ctk.CTkLabel(hf, text=h, width=w,
-                         font=ctk.CTkFont(size=12, weight="bold"),
+                         font=ctk.CTkFont(size=13, weight="bold"),
                          text_color=theme.get("text_primary")).grid(row=0, column=i, padx=8, pady=8, sticky="w")
 
         self.record_scroll = ctk.CTkScrollableFrame(record_card, fg_color="transparent")
@@ -103,6 +104,7 @@ class MedicalRecordsView(ctk.CTkFrame):
     def _load_records(self):
         for w in self.record_scroll.winfo_children():
             w.destroy()
+        self._row_frames.clear()
         if not self._selected_patient_id:
             return
         records = medical_record_controller.get_by_patient(self._selected_patient_id)
@@ -119,14 +121,23 @@ class MedicalRecordsView(ctk.CTkFrame):
             for ci, (val, w) in enumerate(zip(vals, self._widths)):
                 ctk.CTkLabel(row, text=val, width=w,
                              text_color=theme.get("text_primary"),
-                             font=ctk.CTkFont(size=12)).grid(row=0, column=ci, padx=8, pady=0, sticky="w")
+                             font=ctk.CTkFont(size=13)).grid(row=0, column=ci, padx=8, pady=0, sticky="w")
+            self._row_frames[r.id] = (row, bg)
             rid = r.id
             row.bind("<Button-1>", lambda e, i=rid: self._select_record(i))
             for child in row.winfo_children():
                 child.bind("<Button-1>", lambda e, i=rid: self._select_record(i))
 
     def _select_record(self, rid):
+        if self._selected_record_id and self._selected_record_id in self._row_frames:
+            prev_row, prev_bg = self._row_frames[self._selected_record_id]
+            try: prev_row.configure(fg_color=prev_bg)
+            except Exception: pass
         self._selected_record_id = rid
+        if rid in self._row_frames:
+            row, _ = self._row_frames[rid]
+            try: row.configure(fg_color="#1976d2")
+            except Exception: pass
 
     def _open_add(self):
         if not self._selected_patient_id:
@@ -160,7 +171,8 @@ class RecordFormDialog(ctk.CTkToplevel):
         self.record = record
         self.on_save = on_save
         self.title(lang.t("add_record") if not record else lang.t("edit"))
-        self.geometry("500x480")
+        self.geometry("520x560")
+        self.minsize(480, 520)
         self.resizable(False, False)
         self.grab_set()
         self._build()
@@ -175,7 +187,7 @@ class RecordFormDialog(ctk.CTkToplevel):
         def labeled_entry(label, row, default="", height=36):
             ctk.CTkLabel(frame, text=label, anchor="w",
                          text_color=theme.get("text_secondary"),
-                         font=ctk.CTkFont(size=12)).grid(row=row * 2, column=0, sticky="w", pady=(8, 0))
+                         font=ctk.CTkFont(size=13)).grid(row=row * 2, column=0, sticky="w", pady=(8, 0))
             if height > 36:
                 e = ctk.CTkTextbox(frame, height=height,
                                    fg_color=theme.get("entry_bg"),

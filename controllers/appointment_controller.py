@@ -2,17 +2,23 @@
 
 import datetime
 from database.db import get_session
+from sqlalchemy.orm import joinedload
 from models.appointment import Appointment
 
 
 def get_all():
     session = get_session()
     try:
-        return (
+        # Eager-load related patient and doctor so objects remain usable after session close
+        appts = (
             session.query(Appointment)
+            .options(joinedload(Appointment.patient), joinedload(Appointment.doctor))
             .order_by(Appointment.date.desc(), Appointment.time.asc())
             .all()
         )
+        for a in appts:
+            session.expunge(a)
+        return appts
     finally:
         session.close()
 
@@ -21,12 +27,16 @@ def get_today():
     session = get_session()
     try:
         today = datetime.date.today()
-        return (
+        appts = (
             session.query(Appointment)
+            .options(joinedload(Appointment.patient), joinedload(Appointment.doctor))
             .filter(Appointment.date == today)
             .order_by(Appointment.time.asc())
             .all()
         )
+        for a in appts:
+            session.expunge(a)
+        return appts
     finally:
         session.close()
 

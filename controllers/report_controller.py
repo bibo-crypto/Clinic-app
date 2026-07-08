@@ -3,6 +3,7 @@
 import os
 import json
 import datetime
+from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -17,7 +18,9 @@ from models.invoice import Invoice
 from models.appointment import Appointment
 from models.patient import Patient
 
-EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "exports")
+from utils.paths import get_runtime_data_dir
+
+EXPORT_DIR = get_runtime_data_dir() / "exports"
 os.makedirs(EXPORT_DIR, exist_ok=True)
 
 

@@ -87,7 +87,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-The SQLite database is created automatically at `database/clinic.db` on first run.
+The SQLite database is created automatically in a runtime data folder on first run. In source mode it uses the project folder, and in packaged/exe mode it uses the user profile's LocalAppData/ClinicSystem folder so the app works correctly on other machines without relying on the original install path.
 
 ---
 
@@ -111,8 +111,8 @@ Go to **Settings → Theme** and choose Light or Dark. Takes effect on the next 
 
 ## Exported Files
 
-- **PDF reports** → `exports/` directory
-- **Excel reports** → `exports/` directory
+- **PDF reports** → runtime exports folder
+- **Excel reports** → runtime exports folder
 
 ---
 

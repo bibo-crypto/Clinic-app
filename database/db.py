@@ -3,13 +3,17 @@ Database initialization and session management.
 """
 
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
+from utils.paths import get_runtime_data_dir
+
 # Database file location
-DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "database")
+DATA_DIR = get_runtime_data_dir()
+DB_DIR = DATA_DIR / "database"
 os.makedirs(DB_DIR, exist_ok=True)
-DB_PATH = os.path.join(DB_DIR, "clinic.db")
+DB_PATH = str(DB_DIR / "clinic.db")
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

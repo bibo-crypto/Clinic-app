@@ -2,8 +2,11 @@
 
 import json
 import os
+from pathlib import Path
 
-_BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "languages")
+from utils.paths import get_resource_path
+
+_BASE = get_resource_path("languages")
 _strings: dict = {}
 _current_lang: str = "en"
 
@@ -11,9 +14,9 @@ _current_lang: str = "en"
 def load(lang: str = "en") -> None:
     """Load a language file (\"en\" or \"ar\")."""
     global _strings, _current_lang
-    path = os.path.join(_BASE, f"{lang}.json")
-    if not os.path.exists(path):
-        path = os.path.join(_BASE, "en.json")
+    path = _BASE / f"{lang}.json"
+    if not path.exists():
+        path = _BASE / "en.json"
     with open(path, "r", encoding="utf-8") as f:
         _strings = json.load(f)
     _current_lang = lang

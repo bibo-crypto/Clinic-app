@@ -59,10 +59,10 @@
   "status": "الحالة",
   "status_scheduled": "مجدول",
   "status_completed": "مكتمل",
-  "status_cancelled": "ملغى",
+  "status_cancelled": "ملغي",
   "add_appointment": "إضافة موعد",
   "edit_appointment": "تعديل موعد",
-  "double_booking": "الطبيب لديه موعد في هذا الوقت بالفعل.",
+  "double_booking": "هذا الطبيب لديه موعد في نفس الوقت.",
   "complaint": "الشكوى",
   "diagnosis": "التشخيص",
   "prescription": "الوصفة الطبية",
@@ -116,5 +116,7 @@
   "select_patient": "اختر مريضاً",
   "select_doctor": "اختر طبيباً",
   "required_field": "هذا الحقل مطلوب.",
-  "restart_required": "يرجى إعادة تشغيل التطبيق لتطبيق التغييرات."
+  "restart_required": "يرجى إعادة تشغيل التطبيق لتطبيق التغييرات.",
+  "select_appointment": "يرجى تحديد موعد أولاً.",
+  "select_date": "اختر تاريخاً"
 }

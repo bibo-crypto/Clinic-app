@@ -62,7 +62,7 @@
   "status_cancelled": "Cancelled",
   "add_appointment": "Add Appointment",
   "edit_appointment": "Edit Appointment",
-  "double_booking": "Doctor already has an appointment at this time.",
+  "double_booking": "This doctor already has an appointment at this time.",
   "complaint": "Complaint",
   "diagnosis": "Diagnosis",
   "prescription": "Prescription",
@@ -116,5 +116,7 @@
   "select_patient": "Select Patient",
   "select_doctor": "Select Doctor",
   "required_field": "This field is required.",
-  "restart_required": "Please restart the application to apply changes."
+  "restart_required": "Please restart the application to apply changes.",
+  "select_appointment": "Please select an appointment first.",
+  "select_date": "Select Date"
 }
