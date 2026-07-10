@@ -1,9 +1,11 @@
 """Login screen."""
 
+from tkinter import messagebox
+
 import customtkinter as ctk
 from utils import language as lang
 from utils import theme
-from controllers.auth_controller import login
+from controllers.auth_controller import login, reset_password
 
 
 class LoginView(ctk.CTkFrame):
@@ -60,6 +62,11 @@ class LoginView(ctk.CTkFrame):
                             command=self._attempt_login)
         btn.pack(fill="x", pady=(8, 0))
 
+        ctk.CTkButton(body, text=lang.t("reset_password"), height=36,
+                      corner_radius=8, fg_color="transparent", border_width=1,
+                      hover_color=theme.get("card_bg"),
+                      command=self._show_reset_password_dialog).pack(fill="x", pady=(8, 0))
+
         self.username_entry.bind("<Return>", lambda _: self.password_entry.focus())
         self.password_entry.bind("<Return>", lambda _: self._attempt_login())
         self.username_entry.focus()
@@ -76,3 +83,52 @@ class LoginView(ctk.CTkFrame):
         else:
             self.error_label.configure(text=lang.t("invalid_credentials"))
             self.password_entry.delete(0, "end")
+
+    def _show_reset_password_dialog(self):
+        dialog = ctk.CTkToplevel(self)
+        dialog.title(lang.t("reset_password"))
+        dialog.transient(self.winfo_toplevel())
+        dialog.grab_set()
+        dialog.geometry("360x320")
+
+        ctk.CTkLabel(dialog, text=lang.t("reset_password"), font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(16, 8))
+        ctk.CTkLabel(dialog, text=lang.t("reset_password_hint"), justify="center").pack(padx=20, pady=(0, 12))
+
+        ctk.CTkLabel(dialog, text=lang.t("username"), anchor="w").pack(fill="x", padx=24)
+        username_entry = ctk.CTkEntry(dialog, height=38)
+        username_entry.insert(0, self.username_entry.get().strip() or "admin")
+        username_entry.pack(fill="x", padx=24, pady=(2, 10))
+
+        ctk.CTkLabel(dialog, text=lang.t("reset_token"), anchor="w").pack(fill="x", padx=24)
+        reset_token_entry = ctk.CTkEntry(dialog, height=38)
+        reset_token_entry.pack(fill="x", padx=24, pady=(2, 10))
+
+        ctk.CTkLabel(dialog, text=lang.t("new_password"), anchor="w").pack(fill="x", padx=24)
+        new_pw_entry = ctk.CTkEntry(dialog, height=38, show="•")
+        new_pw_entry.pack(fill="x", padx=24, pady=(2, 10))
+
+        ctk.CTkLabel(dialog, text=lang.t("confirm_password"), anchor="w").pack(fill="x", padx=24)
+        confirm_pw_entry = ctk.CTkEntry(dialog, height=38, show="•")
+        confirm_pw_entry.pack(fill="x", padx=24, pady=(2, 10))
+
+        def submit_reset():
+            username = username_entry.get().strip()
+            reset_token = reset_token_entry.get().strip()
+            new_password = new_pw_entry.get().strip()
+            confirm_password = confirm_pw_entry.get().strip()
+
+            if not username or not reset_token or not new_password or not confirm_password:
+                messagebox.showerror(lang.t("error"), lang.t("required_field"))
+                return
+            if new_password != confirm_password:
+                messagebox.showerror(lang.t("error"), lang.t("passwords_do_not_match"))
+                return
+
+            if reset_password(username, new_password, reset_token):
+                messagebox.showinfo(lang.t("success"), lang.t("password_updated"))
+                dialog.destroy()
+            else:
+                messagebox.showerror(lang.t("error"), lang.t("user_not_found"))
+
+        ctk.CTkButton(dialog, text=lang.t("save"), height=40,
+                      command=submit_reset).pack(pady=(12, 12))

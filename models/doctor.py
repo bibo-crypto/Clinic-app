@@ -15,3 +15,4 @@ class Doctor(Base):
     consultation_fee = Column(Float, default=0.0)
 
     appointments = relationship("Appointment", back_populates="doctor", cascade="all, delete-orphan")
+    invoices = relationship("Invoice", back_populates="doctor")

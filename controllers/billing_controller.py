@@ -9,11 +9,41 @@ from models.invoice import Invoice
 def get_all():
     session = get_session()
     try:
-        return (
+        from sqlalchemy.orm import joinedload
+        invoices = (
             session.query(Invoice)
+            .options(joinedload(Invoice.patient))
             .order_by(Invoice.invoice_date.desc())
             .all()
         )
+        # Serialize to dicts to avoid lazy-loading issues after session close
+        result = []
+        for inv in invoices:
+            try:
+                result.append({
+                    'id': inv.id,
+                    'patient_id': inv.patient_id,
+                    'patient_name': inv.patient.full_name if inv.patient else 'Unknown',
+                    'doctor_id': inv.doctor_id,
+                    'doctor_name': inv.doctor.full_name if inv.doctor else '',
+                    'invoice_date': inv.invoice_date,
+                    'consultation_fee': inv.consultation_fee,
+                    'additional_services': inv.additional_services,
+                    'discount': inv.discount,
+                    'total_amount': inv.total_amount,
+                    'is_paid': inv.is_paid,
+                    'notes': inv.notes,
+                })
+            except Exception as item_err:
+                print(f"Error serializing invoice {inv.id}: {item_err}")
+                continue
+        print(f"get_all() returned {len(result)} invoices")
+        return result
+    except Exception as e:
+        print(f"Error in get_all: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
     finally:
         session.close()
 
@@ -21,12 +51,35 @@ def get_all():
 def get_by_patient(patient_id: int):
     session = get_session()
     try:
-        return (
+        from sqlalchemy.orm import joinedload
+        invoices = (
             session.query(Invoice)
+            .options(joinedload(Invoice.patient))
             .filter_by(patient_id=patient_id)
             .order_by(Invoice.invoice_date.desc())
             .all()
         )
+        # Serialize to dicts to avoid lazy-loading issues after session close
+        result = []
+        for inv in invoices:
+            result.append({
+                'id': inv.id,
+                'patient_id': inv.patient_id,
+                'patient_name': inv.patient.full_name if inv.patient else '',
+                'doctor_id': inv.doctor_id,
+                'doctor_name': inv.doctor.full_name if inv.doctor else '',
+                'invoice_date': inv.invoice_date,
+                'consultation_fee': inv.consultation_fee,
+                'additional_services': inv.additional_services,
+                'discount': inv.discount,
+                'total_amount': inv.total_amount,
+                'is_paid': inv.is_paid,
+                'notes': inv.notes,
+            })
+        return result
+    except Exception as e:
+        print(f"Error in get_by_patient: {e}")
+        return []
     finally:
         session.close()
 
@@ -64,14 +117,20 @@ def add(data: dict) -> Invoice:
     try:
         if "additional_services" in data and isinstance(data["additional_services"], list):
             data["additional_services"] = json.dumps(data["additional_services"])
+        print(f"Creating invoice with data: {data}")
         invoice = Invoice(**data)
         session.add(invoice)
         session.commit()
         session.refresh(invoice)
-        session.expunge(invoice)
+        inv_id = invoice.id
+        print(f"Invoice created with ID: {inv_id}")
+        session.expunge_all()
         return invoice
-    except Exception:
+    except Exception as e:
         session.rollback()
+        print(f"Error adding invoice: {e}")
+        import traceback
+        traceback.print_exc()
         raise
     finally:
         session.close()

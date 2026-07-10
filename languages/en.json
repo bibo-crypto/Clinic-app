@@ -111,6 +111,9 @@
   "unpaid": "Unpaid",
   "payment_status": "Payment Status",
   "mark_paid": "Mark as Paid",
+  "invoice_created": "Invoice created successfully.",
+  "invoice_printed": "Invoice opened for printing.",
+  "confirm_mark_paid": "Do you want to confirm this invoice as paid?",
   "age": "Age",
   "actions": "Actions",
   "select_patient": "Select Patient",
@@ -122,5 +125,11 @@
   "current_password": "Current Password",
   "new_password": "New Password",
   "confirm_password": "Confirm Password",
-  "change_password": "Change Password"
+  "change_password": "Change Password",
+  "reset_password": "Reset Password",
+  "reset_password_hint": "Enter the username, the setup reset token, and a new password. The new password will be saved in a text file with the application data.",
+  "reset_token": "Reset Token",
+  "passwords_do_not_match": "Passwords do not match.",
+  "password_updated": "Password updated successfully.",
+  "user_not_found": "User not found."
 }

@@ -11,6 +11,7 @@ class Invoice(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)
     invoice_date = Column(Date, nullable=False, default=datetime.date.today)
     consultation_fee = Column(Float, default=0.0)
     additional_services = Column(Text, default="[]")  # JSON list of {name, price}
@@ -20,3 +21,4 @@ class Invoice(Base):
     notes = Column(String(300), default="")
 
     patient = relationship("Patient", back_populates="invoices")
+    doctor = relationship("Doctor", back_populates="invoices")

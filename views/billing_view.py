@@ -2,6 +2,10 @@
 
 import json
 import datetime
+import os
+import webbrowser
+from html import escape
+from pathlib import Path
 import customtkinter as ctk
 from tkinter import messagebox
 from utils import language as lang
@@ -26,6 +30,7 @@ class BillingView(ctk.CTkFrame):
 
         for label, cmd, color in [
             (lang.t("create_invoice"), self._open_add, theme.get("accent")),
+            (lang.t("print"), self._print_selected, theme.get("accent")),
             (lang.t("mark_paid"), self._mark_paid, theme.get("success")),
             (lang.t("delete"), self._delete, theme.get("danger")),
         ]:
@@ -37,15 +42,17 @@ class BillingView(ctk.CTkFrame):
         card.pack(fill="both", expand=True, padx=28, pady=(0, 24))
 
         headers = ["#", lang.t("patient"), lang.t("invoice_number"),
-                   lang.t("visit_date"), lang.t("total_amount"), lang.t("payment_status")]
-        widths = [40, 180, 80, 110, 110, 100]
+                   lang.t("doctor"), lang.t("visit_date"), lang.t("total_amount"), lang.t("payment_status")]
+        widths = [40, 160, 90, 140, 110, 110, 100]
 
         hf = ctk.CTkFrame(card, fg_color=theme.get("table_header"), corner_radius=0)
         hf.pack(fill="x")
         for i, (h, w) in enumerate(zip(headers, widths)):
             ctk.CTkLabel(hf, text=h, width=w,
                          font=ctk.CTkFont(size=13, weight="bold"),
-                         text_color=theme.get("text_primary")).grid(row=0, column=i, padx=8, pady=8, sticky="w")
+                         text_color=theme.get("text_primary"),
+                         anchor="e" if lang.is_rtl() else "w",
+                         justify="right" if lang.is_rtl() else "left").grid(row=0, column=i, padx=8, pady=8, sticky="w")
 
         self.scroll = ctk.CTkScrollableFrame(card, fg_color="transparent")
         self.scroll.pack(fill="both", expand=True)
@@ -55,34 +62,44 @@ class BillingView(ctk.CTkFrame):
         for w in self.scroll.winfo_children():
             w.destroy()
         self._row_frames.clear()
-        invoices = billing_controller.get_all()
+        try:
+            invoices = billing_controller.get_all()
+        except Exception as e:
+            messagebox.showerror(lang.t("error"), f"Failed to load invoices: {str(e)}")
+            return
+        
         if not invoices:
             ctk.CTkLabel(self.scroll, text=lang.t("no_records"),
                          text_color=theme.get("text_secondary")).pack(pady=20)
             return
-        for idx, inv in enumerate(invoices):
+        
+        for idx, inv_data in enumerate(invoices):
             bg = theme.get("card_bg") if idx % 2 == 0 else theme.get("table_row_alt")
             row = ctk.CTkFrame(self.scroll, fg_color=bg, corner_radius=0, height=36)
             row.pack(fill="x")
             row.pack_propagate(False)
-            paid_text = lang.t("paid") if inv.is_paid else lang.t("unpaid")
-            paid_color = theme.get("success") if inv.is_paid else theme.get("danger")
+            paid_text = lang.t("paid") if inv_data['is_paid'] else lang.t("unpaid")
+            paid_color = theme.get("success") if inv_data['is_paid'] else theme.get("danger")
+            
             vals = [
                 str(idx + 1),
-                inv.patient.full_name if inv.patient else "",
-                f"INV-{inv.id:04d}",
-                str(inv.invoice_date),
-                f"${inv.total_amount:.2f}",
+                inv_data['patient_name'],
+                f"INV-{inv_data['id']:04d}",
+                inv_data.get('doctor_name') or '—',
+                str(inv_data['invoice_date']),
+                f"${inv_data['total_amount']:.2f}",
                 paid_text,
             ]
             colors_list = [
-                theme.get("text_primary")] * 5 + [paid_color]
+                theme.get("text_primary")] * 6 + [paid_color]
             for ci, (val, w, color) in enumerate(zip(vals, self._widths, colors_list)):
                 ctk.CTkLabel(row, text=val, width=w,
                              text_color=color,
-                             font=ctk.CTkFont(size=13)).grid(row=0, column=ci, padx=8, pady=0, sticky="w")
-            self._row_frames[inv.id] = (row, bg)
-            iid = inv.id
+                             font=ctk.CTkFont(size=13),
+                             anchor="e" if lang.is_rtl() else "w",
+                             justify="right" if lang.is_rtl() else "left").grid(row=0, column=ci, padx=8, pady=0, sticky="w")
+            self._row_frames[inv_data['id']] = (row, bg)
+            iid = inv_data['id']
             row.bind("<Button-1>", lambda e, i=iid: self._select(i))
             for child in row.winfo_children():
                 child.bind("<Button-1>", lambda e, i=iid: self._select(i))
@@ -99,14 +116,87 @@ class BillingView(ctk.CTkFrame):
             except Exception: pass
 
     def _open_add(self):
-        InvoiceFormDialog(self, self._load)
+        try:
+            InvoiceFormDialog(self, self._load)
+        except Exception as e:
+            messagebox.showerror(lang.t("error"), f"Failed to open invoice form: {str(e)}")
 
     def _mark_paid(self):
         if not self._selected_id:
             messagebox.showinfo(lang.t("mark_paid"), "Please select an invoice.")
             return
+        if not messagebox.askyesno(lang.t("confirm"), lang.t("confirm_mark_paid")):
+            return
         billing_controller.mark_paid(self._selected_id)
         self._load()
+
+    def _print_selected(self):
+        if not self._selected_id:
+            messagebox.showinfo(lang.t("print"), "Please select an invoice.")
+            return
+        invoices = billing_controller.get_all()
+        invoice = next((inv for inv in invoices if inv['id'] == self._selected_id), None)
+        if not invoice:
+            messagebox.showerror(lang.t("error"), "Invoice not found.")
+            return
+
+        output_dir = Path(__file__).resolve().parent.parent / "output"
+        output_dir.mkdir(exist_ok=True)
+        html_path = output_dir / f"invoice_{invoice['id']}.html"
+        html_path.write_text(self._render_invoice_html(invoice), encoding="utf-8")
+
+        try:
+            if hasattr(os, "startfile"):
+                os.startfile(str(html_path))
+            else:
+                webbrowser.open_new_tab(html_path.as_uri())
+            messagebox.showinfo(lang.t("success"), lang.t("invoice_printed"))
+        except Exception as exc:
+            messagebox.showerror(lang.t("error"), f"Failed to open invoice for printing: {exc}")
+
+    def _render_invoice_html(self, invoice):
+        services = invoice.get("additional_services") or []
+        if isinstance(services, str):
+            try:
+                services = json.loads(services)
+            except Exception:
+                services = []
+
+        service_rows = "".join(
+            f"<tr><td>{escape(str(s.get('name', '')))}</td><td>{s.get('price', 0):.2f}</td></tr>"
+            for s in services
+        )
+        rtl = "rtl" if lang.is_rtl() else "ltr"
+        return f"""<!DOCTYPE html>
+<html dir=\"{rtl}\" lang=\"{lang.current()}\">
+<head>
+  <meta charset=\"utf-8\" />
+  <title>Invoice {invoice['id']}</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; margin: 24px; color: #222; }}
+    .title {{ font-size: 24px; font-weight: bold; margin-bottom: 12px; }}
+    .meta {{ margin-bottom: 12px; }}
+    table {{ width: 100%; border-collapse: collapse; margin-top: 12px; }}
+    th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+    th {{ background: #f3f3f3; }}
+    .total {{ font-weight: bold; margin-top: 12px; }}
+  </style>
+</head>
+<body>
+  <div class=\"title\">{escape(lang.t('billing'))}</div>
+  <div class=\"meta\">{escape(lang.t('invoice_number'))}: INV-{invoice['id']:04d}</div>
+  <div class=\"meta\">{escape(lang.t('patient'))}: {escape(invoice.get('patient_name') or '—')}</div>
+  <div class=\"meta\">{escape(lang.t('doctor'))}: {escape(invoice.get('doctor_name') or '—')}</div>
+  <div class=\"meta\">{escape(lang.t('visit_date'))}: {invoice['invoice_date']}</div>
+  <div class=\"meta\">{escape(lang.t('consultation_fee'))}: ${invoice.get('consultation_fee', 0):.2f}</div>
+  <div class=\"meta\">{escape(lang.t('discount'))}: ${invoice.get('discount', 0):.2f}</div>
+  <table>
+    <thead><tr><th>{escape(lang.t('service_name'))}</th><th>{escape(lang.t('service_price'))}</th></tr></thead>
+    <tbody>{service_rows}</tbody>
+  </table>
+  <div class=\"total\">{escape(lang.t('total_amount'))}: ${invoice.get('total_amount', 0):.2f}</div>
+</body>
+</html>"""
 
     def _delete(self):
         if not self._selected_id:
@@ -251,10 +341,19 @@ class InvoiceFormDialog(ctk.CTkToplevel):
         except ValueError:
             messagebox.showerror(lang.t("error"), "Fee and discount must be numbers.")
             return
+
+        doctor_id = None
+        try:
+            doctor_text = self.doctor_menu.get()
+            doctor_id = int(doctor_text.split("—")[0].strip()) if doctor_text else None
+        except Exception:
+            doctor_id = None
+        
         svc_total = sum(s["price"] for s in self._services)
         total = max(0, fee + svc_total - discount)
         data = {
             "patient_id": pid,
+            "doctor_id": doctor_id,
             "invoice_date": datetime.date.today(),
             "consultation_fee": fee,
             "additional_services": self._services,
@@ -262,6 +361,13 @@ class InvoiceFormDialog(ctk.CTkToplevel):
             "total_amount": total,
             "is_paid": False,
         }
-        billing_controller.add(data)
-        self.on_save()
-        self.destroy()
+        try:
+            result = billing_controller.add(data)
+            if result and result.id:
+                messagebox.showinfo(lang.t("success"), lang.t("invoice_created"))
+                self.on_save()
+                self.destroy()
+            else:
+                messagebox.showerror(lang.t("error"), "Failed to create invoice.")
+        except Exception as e:
+            messagebox.showerror(lang.t("error"), f"Error creating invoice: {str(e)}")
