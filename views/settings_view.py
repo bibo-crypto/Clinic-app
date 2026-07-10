@@ -102,15 +102,15 @@ class SettingsView(ctk.CTkFrame):
             return widget
 
         self.current_pw = ctk.CTkEntry(inner_pw, show="•", fg_color=theme.get("entry_bg"), height=36)
-        pw_row(lang.t("current_password") if lang.t("current_password") != "current_password" else "Current password", 0, self.current_pw)
+        pw_row(lang.t("current_password"), 0, self.current_pw)
 
         self.new_pw = ctk.CTkEntry(inner_pw, show="•", fg_color=theme.get("entry_bg"), height=36)
-        pw_row(lang.t("new_password") if lang.t("new_password") != "new_password" else "New password", 1, self.new_pw)
+        pw_row(lang.t("new_password"), 1, self.new_pw)
 
         self.confirm_pw = ctk.CTkEntry(inner_pw, show="•", fg_color=theme.get("entry_bg"), height=36)
-        pw_row(lang.t("confirm_password") if lang.t("confirm_password") != "confirm_password" else "Confirm password", 2, self.confirm_pw)
+        pw_row(lang.t("confirm_password"), 2, self.confirm_pw)
 
-        ctk.CTkButton(inner_pw, text=lang.t("change_password") if lang.t("change_password") != "change_password" else "Change password",
+        ctk.CTkButton(inner_pw, text=lang.t("change_password"),
                       height=36, fg_color=theme.get("accent"), hover_color=theme.get("accent_hover"),
                       corner_radius=8, command=self._change_password).grid(row=3, column=1, sticky="e", pady=(8, 0))
 

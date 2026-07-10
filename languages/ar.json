@@ -118,5 +118,9 @@
   "required_field": "هذا الحقل مطلوب.",
   "restart_required": "يرجى إعادة تشغيل التطبيق لتطبيق التغييرات.",
   "select_appointment": "يرجى تحديد موعد أولاً.",
-  "select_date": "اختر تاريخاً"
+  "select_date": "اختر تاريخاً",
+  "current_password": "كلمة المرور الحالية",
+  "new_password": "كلمة المرور الجديدة",
+  "confirm_password": "تأكيد كلمة المرور",
+  "change_password": "تغيير كلمة المرور"
 }

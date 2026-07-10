@@ -118,5 +118,9 @@
   "required_field": "This field is required.",
   "restart_required": "Please restart the application to apply changes.",
   "select_appointment": "Please select an appointment first.",
-  "select_date": "Select Date"
+  "select_date": "Select Date",
+  "current_password": "Current Password",
+  "new_password": "New Password",
+  "confirm_password": "Confirm Password",
+  "change_password": "Change Password"
 }
