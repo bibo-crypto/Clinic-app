@@ -7,16 +7,21 @@ from models.user import User
 
 
 def verify_reset_token(provided_token: str) -> bool:
-    """Validate the setup-generated reset token from the password file."""
+    """Validate the reset token from ClinicSystem_RESET_PASSWORD.txt on the desktop."""
     from database.first_run import get_password_file_path
 
-    file_path = get_password_file_path()
-    if not file_path.exists():
+    # الملف الصحيح هو ClinicSystem_RESET_PASSWORD.txt وليس ملف الباسورد
+    password_file = get_password_file_path()
+    reset_file = password_file.with_name("ClinicSystem_RESET_PASSWORD.txt")
+
+    if not reset_file.exists():
         return False
 
-    for line in file_path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("Reset Token :"):
+    for line in reset_file.read_text(encoding="utf-8").splitlines():
+        # write_reset_password_file تكتب: "Reset Password : <token>"
+        if line.startswith("Reset Password :"):
             return line.split(":", 1)[1].strip() == provided_token
+
     return False
 
 

@@ -29,9 +29,10 @@ class AppointmentsView(ctk.CTkFrame):
                      text_color=theme.get("text_primary")).pack(side="left")
 
         for label, cmd, color in [
-            (lang.t("add"),    self._open_add,    theme.get("accent")),
-            (lang.t("edit"),   self._open_edit,   theme.get("warning")),
-            (lang.t("delete"), self._delete,      theme.get("danger")),
+            (lang.t("add"),                 self._open_add,       theme.get("accent")),
+            (lang.t("edit"),                self._open_edit,      theme.get("warning")),
+            (lang.t("delete"),              self._delete,         theme.get("danger")),
+            (lang.t("complete_appointment"), self._complete_appt, "#2e7d32"),
         ]:
             ctk.CTkButton(top, text=label, width=90, height=38,
                           fg_color=color, hover_color=theme.get("accent_hover"),
@@ -129,12 +130,69 @@ class AppointmentsView(ctk.CTkFrame):
 
     def _delete(self):
         if not self._selected_id:
-            messagebox.showinfo(lang.t("delete"), "Please select an appointment first.")
+            messagebox.showinfo(lang.t("delete"), lang.t("no_appointment_selected"))
             return
         if messagebox.askyesno(lang.t("confirm"), lang.t("confirm_delete")):
             appointment_controller.delete(self._selected_id)
             self._selected_id = None
             self._load()
+
+    def _complete_appt(self):
+        if not self._selected_id:
+            messagebox.showinfo(
+                lang.t("complete_appointment"),
+                lang.t("no_appointment_selected"))
+            return
+
+        # جلب الموعد
+        appts = appointment_controller.get_all()
+        appt = next((a for a in appts if a.id == self._selected_id), None)
+        if not appt:
+            return
+
+        if appt.status in ("completed", "cancelled"):
+            messagebox.showwarning(
+                lang.t("complete_appointment"),
+                lang.t("appointment_already_done"))
+            return
+
+        if not messagebox.askyesno(
+                lang.t("complete_appointment"),
+                lang.t("confirm_complete")):
+            return
+
+        # 1. تحديث حالة الموعد → completed
+        appointment_controller.update(
+            appt.id, {"status": "completed"})
+
+        # 2. إنشاء فاتورة غير مدفوعة تلقائياً
+        import datetime
+        from controllers import billing_controller, doctor_controller
+        fee = 0.0
+        if appt.doctor_id:
+            doctors = doctor_controller.get_all()
+            doc = next((d for d in doctors if d.id == appt.doctor_id), None)
+            if doc:
+                fee = doc.consultation_fee or 0.0
+
+        billing_controller.add({
+            "patient_id":       appt.patient_id,
+            "doctor_id":        appt.doctor_id,
+            "invoice_date":     datetime.date.today(),
+            "consultation_fee": fee,
+            "additional_services": "[]",
+            "discount":         0.0,
+            "total_amount":     fee,
+            "is_paid":          False,
+            "notes":            f"Auto-created from appointment #{appt.id}",
+        })
+
+        messagebox.showinfo(
+            lang.t("success"),
+            f"{lang.t('appointment_completed')}\n{lang.t('invoice_created_from_appointment')}")
+
+        self._selected_id = None
+        self._load()
 
 
 class TimePickerDialog(tk.Toplevel):

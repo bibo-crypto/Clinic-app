@@ -59,34 +59,54 @@ def _seed_defaults():
 
     session = get_session()
     try:
-        from database.first_run import ensure_setup_credentials, get_password_file_path
+        from database.first_run import (
+            ensure_setup_credentials,
+            write_password_file,
+            write_reset_password_file,
+            get_password_file_path,
+        )
 
-        credentials = ensure_setup_credentials("admin")
         admin_user = session.query(User).filter_by(username="admin").first()
 
         if not admin_user:
-            hashed = bcrypt.hashpw(str(credentials["password"]).encode(), bcrypt.gensalt()).decode()
-            admin_user = User(username="admin", password_hash=hashed, role="admin", full_name="Administrator")
+            # أول تثبيت — توليد باسورد ورمز reset وكتابة الملفين على سطح المكتب
+            credentials = ensure_setup_credentials("admin")
+            hashed = bcrypt.hashpw(
+                str(credentials["password"]).encode(), bcrypt.gensalt()
+            ).decode()
+            admin_user = User(
+                username="admin",
+                password_hash=hashed,
+                role="admin",
+                full_name="Administrator",
+            )
             session.add(admin_user)
         else:
+            # المستخدم موجود — تأكد إن الملفين موجودان على سطح المكتب
+            # لو أي منهم ناقص، أعد كتابتهم بنفس الباسورد الحالي + reset token جديد
             password_file = get_password_file_path()
             reset_file = password_file.with_name("ClinicSystem_RESET_PASSWORD.txt")
+
             if not password_file.exists() or not reset_file.exists():
-                hashed = bcrypt.hashpw(str(credentials["password"]).encode(), bcrypt.gensalt()).decode()
+                # نولّد credentials جديدة ونكتب الملفين
+                credentials = ensure_setup_credentials("admin")
+                # نحدّث الباسورد في قاعدة البيانات عشان يتطابق مع الملف الجديد
+                hashed = bcrypt.hashpw(
+                    str(credentials["password"]).encode(), bcrypt.gensalt()
+                ).decode()
                 admin_user.password_hash = hashed
-                session.add(admin_user)
 
         # Default settings
         if not session.query(Setting).first():
-            defaults = Setting(
+            session.add(Setting(
                 clinic_name="My Clinic",
                 theme="light",
                 language="en",
-                logo_path=""
-            )
-            session.add(defaults)
+                logo_path="",
+            ))
 
         session.commit()
+
     except Exception as e:
         session.rollback()
         print(f"Seed error: {e}")

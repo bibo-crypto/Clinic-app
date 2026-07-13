@@ -127,9 +127,17 @@
   "confirm_password": "Confirm Password",
   "change_password": "Change Password",
   "reset_password": "Reset Password",
-  "reset_password_hint": "Enter the username, the setup reset token, and a new password. The new password will be saved in a text file with the application data.",
+  "reset_password_hint": "Enter your username, the reset token from ClinicSystem_RESET_PASSWORD.txt on the desktop, and your new password.",
   "reset_token": "Reset Token",
   "passwords_do_not_match": "Passwords do not match.",
   "password_updated": "Password updated successfully.",
-  "user_not_found": "User not found."
+  "user_not_found": "User not found or invalid reset token.",
+  "complete_appointment": "Complete",
+  "confirm_complete": "Mark this appointment as completed and create an invoice?",
+  "appointment_completed": "Appointment marked as completed.",
+  "invoice_created_from_appointment": "Invoice created successfully.",
+  "select_time": "Select Time",
+  "no_appointment_selected": "Please select an appointment first.",
+  "appointment_already_done": "This appointment is already completed or cancelled.",
+  "invalid_token": "Invalid reset token."
 }

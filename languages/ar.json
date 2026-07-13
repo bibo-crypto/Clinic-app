@@ -127,9 +127,17 @@
   "confirm_password": "تأكيد كلمة المرور",
   "change_password": "تغيير كلمة المرور",
   "reset_password": "إعادة تعيين كلمة المرور",
-  "reset_password_hint": "أدخل اسم المستخدم ورمز إعادة التعيين الذي تم إنشاؤه عند الإعداد وكلمة مرور جديدة. سيتم حفظ كلمة المرور الجديدة في ملف نصي داخل بيانات البرنامج.",
-  "reset_token": "رمز إعادة التعيين",
+  "reset_password_hint": "أدخل اسم المستخدم ورمز الاسترداد من ملف ClinicSystem_RESET_PASSWORD.txt على سطح المكتب، ثم كلمة المرور الجديدة.",
+  "reset_token": "رمز الاسترداد",
   "passwords_do_not_match": "كلمتا المرور غير متطابقتين.",
   "password_updated": "تم تحديث كلمة المرور بنجاح.",
-  "user_not_found": "لم يتم العثور على المستخدم."
+  "user_not_found": "المستخدم غير موجود أو رمز الاسترداد غير صحيح.",
+  "complete_appointment": "إتمام",
+  "confirm_complete": "هل تريد تحديد هذا الموعد كمكتمل وإنشاء فاتورة؟",
+  "appointment_completed": "تم تحديد الموعد كمكتمل.",
+  "invoice_created_from_appointment": "تم إنشاء الفاتورة بنجاح.",
+  "select_time": "اختر الوقت",
+  "no_appointment_selected": "يرجى تحديد موعد أولاً.",
+  "appointment_already_done": "هذا الموعد مكتمل أو ملغي بالفعل.",
+  "invalid_token": "رمز الاسترداد غير صحيح."
 }
