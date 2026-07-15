@@ -42,6 +42,24 @@ datas    += xl_d
 binaries += xl_b
 hiddenimports += xl_h
 
+# tkcalendar — date picker widget
+try:
+    tc_d, tc_b, tc_h = collect_all("tkcalendar")
+    datas    += tc_d
+    binaries += tc_b
+    hiddenimports += tc_h
+except Exception:
+    hiddenimports += ["tkcalendar"]
+
+# babel — required by tkcalendar for locale/date formatting
+try:
+    ba_d, ba_b, ba_h = collect_all("babel")
+    datas    += ba_d
+    binaries += ba_b
+    hiddenimports += ba_h
+except Exception:
+    hiddenimports += ["babel", "babel.numbers", "babel.dates"]
+
 # Application language files and assets
 datas += [
     ("languages", "languages"),
